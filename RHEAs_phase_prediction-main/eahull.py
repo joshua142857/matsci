@@ -484,4 +484,4 @@ def run5(structure, el1, el2, el3, el4, el5):
             return temp
     return "Not Found"
 
-print(run5("FCC", "Co", "Fe", "Mn", "W", "Zn"))
+# print(run5("FCC", "Co", "Fe", "Mn", "W", "Zn"))
