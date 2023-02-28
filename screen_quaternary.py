@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import xlsxwriter
-wb = xlsxwriter.Workbook('RHEAs_phase_prediction-main/enthalpy_data_and_predictions/4element.xlsx',
+wb = xlsxwriter.Workbook('RHEAs_phase_prediction-main/4element.xlsx',
                          {'strings_to_numbers': True})
 sheets = ["BCC", "FCC"]
 for n in range(2):

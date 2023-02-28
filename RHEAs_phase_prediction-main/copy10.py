@@ -1,6 +1,4 @@
-import update as u
+import update4 as u
 
-x = u.run(58580)
-while x != -1:
-    print(x)
-    x = u.run(x)
+x = u.run(12000, 15000, "FCC")
+

@@ -1,17 +1,27 @@
 import itertools
+import random
 import time
 import pandas as pd
 import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from pymatgen.core import Composition
-from pymatgen.ext.matproj import MPRester
 import numpy as np
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PDPlotter, PDEntry, Element
 from matminer.data_retrieval.retrieve_MP import MPDataRetrieval
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
+from mp_api.client import MPRester, Composition
+mpr = MPRester("NUNc2qkYfekFR1DkxzhKvBCAMVAgOLoF")
 
-mpdr = MPDataRetrieval(api_key='G8wzS2jCgWDvA6yMB5bk')  # or MPDataRetrieval(api_key=YOUR_API_KEY here)
+def DataRetrieval(chemsys):
+    fields = ['formula_pretty', 'formation_energy_per_atom', 'energy_above_hull']
+    docs = mpr.summary.search(chemsys=chemsys, fields=fields)
+    df = pd.DataFrame(columns=fields)
+    for row in range(len(docs)):
+        df.at[row, 'formula_pretty'] = docs[row].formula_pretty
+        df.at[row, 'formation_energy_per_atom'] = docs[row].formation_energy_per_atom
+        df.at[row, 'energy_above_hull'] = docs[row].energy_above_hull
+        row += 1
+    return df
 
 def run3(structure, el1, el2, el3):
     def binary():
@@ -34,6 +44,7 @@ def run3(structure, el1, el2, el3):
         third_el = el
         return sorted(["{}-{}-{}".format(*sorted(triple))
                        for triple in itertools.product(first_el, second_el, third_el)])
+
     df_sqs_2 = pd.read_excel('./enthalpy_data_and_predictions/bokas.xlsx', sheet_name=structure)
     # df_sqs_2 = pd.read_excel('./enthalpy_data_and_predictions/pairwise_mixing_enthalpy.xlsx', sheet_name="our work")
     df_sqs_2.set_index('Unnamed: 0', inplace=True)
@@ -73,14 +84,10 @@ def run3(structure, el1, el2, el3):
             df_pd.at[6, 'S'] = 0
             # query binary intermetallic from the materials project
             el = {e1, e2, e3}
-            df_1 = mpdr.get_dataframe({'chemsys': {'$in': binary()}},
-                                      properties=['pretty_formula', "formation_energy_per_atom", "e_above_hull"])
-            try:
-                df_2 = mpdr.get_dataframe({'chemsys': {'$in': ternary()}},
-                                              properties=['pretty_formula', "formation_energy_per_atom", "e_above_hull"])
+            df_1 = DataRetrieval(binary())
+            df_2 = DataRetrieval(ternary())
+            if not df_2.empty:
                 df_1 = pd.concat([df_2, df_1], ignore_index=True)
-            except:
-                print()
             df_in = pd.DataFrame()
             df_in['comp'] = df_1['pretty_formula']
             df_in['Hf'] = df_1['formation_energy_per_atom']
@@ -89,6 +96,7 @@ def run3(structure, el1, el2, el3):
             # build phase diagram
             comps = df_final['comp']
             temp = 100
+
             def phasecheck(t):
                 Ef = df_final['Hf'] - t * df_final['S']
                 mg_comp = [None] * len(comps)
@@ -120,6 +128,7 @@ def run3(structure, el1, el2, el3):
                 print(ehull)
                 print(phase)
                 return float(ehull)
+
             temperature = []
             eahull = []
             for x in range(20):
@@ -129,9 +138,14 @@ def run3(structure, el1, el2, el3):
                 temp += 100
             fig, ax = plt.subplots()
             ax.plot(temperature, eahull)
+            plt.xlabel('Temperature (K)')
+            plt.ylabel('Energy above hull')
+            title = "Stability vs. Temperature for " + el1 + el2 + el3
+            plt.title(title)
             plt.show()
             return
     return "Not Found"
+
 
 def run4(structure, el1, el2, el3, el4):
     def binary():
@@ -154,6 +168,7 @@ def run4(structure, el1, el2, el3, el4):
         third_el = el
         return sorted(["{}-{}-{}".format(*sorted(triple))
                        for triple in itertools.product(first_el, second_el, third_el)])
+
     df_sqs_2 = pd.read_excel('./enthalpy_data_and_predictions/bokas.xlsx', sheet_name=structure)
     df_sqs_2.set_index('Unnamed: 0', inplace=True)
 
@@ -226,11 +241,10 @@ def run4(structure, el1, el2, el3, el4):
             df_pd.at[14, 'S'] = 0
             # query binary intermetallic from the materials project
             el = {e1, e2, e3, e4}
-            df_1 = mpdr.get_dataframe({'chemsys': {'$in': binary()}},
-                                      properties=['pretty_formula', "formation_energy_per_atom", "e_above_hull"])
-            df_2 = mpdr.get_dataframe({'chemsys': {'$in': ternary()}},
-                                          properties=['pretty_formula', "formation_energy_per_atom", "e_above_hull"])
-            df_1 = pd.concat([df_2, df_1], ignore_index=True)
+            df_1 = DataRetrieval(binary())
+            df_2 = DataRetrieval(ternary())
+            if not df_2.empty:
+                df_1 = pd.concat([df_2, df_1], ignore_index=True)
             df_in = pd.DataFrame()
             df_in['comp'] = df_1['pretty_formula']
             df_in['Hf'] = df_1['formation_energy_per_atom']
@@ -239,6 +253,7 @@ def run4(structure, el1, el2, el3, el4):
             # build phase diagram
             comps = df_final['comp']
             temp = 0
+
             def phasecheck(t):
                 Ef = df_final['Hf'] - t * df_final['S']
                 mg_comp = [None] * len(comps)
@@ -277,10 +292,13 @@ def run4(structure, el1, el2, el3, el4):
                 temp += 100
             fig, ax = plt.subplots()
             ax.plot(temperature, eahull)
+            plt.xlabel('Temperature (K)')
+            plt.ylabel('Energy above hull')
+            title = "Stability vs. Temperature for " + el1 + el2 + el3 + el4
+            plt.title(title)
             plt.show()
             return
     return "Not Found"
-
 
 
 def run5(structure, el1, el2, el3, el4, el5):
@@ -304,6 +322,7 @@ def run5(structure, el1, el2, el3, el4, el5):
         third_el = el
         return sorted(["{}-{}-{}".format(*sorted(triple))
                        for triple in itertools.product(first_el, second_el, third_el)])
+
     df_sqs_2 = pd.read_excel('./enthalpy_data_and_predictions/bokas.xlsx', sheet_name=structure)
     df_sqs_2.set_index('Unnamed: 0', inplace=True)
 
@@ -317,7 +336,7 @@ def run5(structure, el1, el2, el3, el4, el5):
         e3 = row['e3']
         e4 = row['e4']
         e5 = row['e5']
-        if str(e1+e2+e3+e4+e5) == str(el1+el2+el3+el4+el5):
+        if str(e1 + e2 + e3 + e4 + e5) == str(el1 + el2 + el3 + el4 + el5):
             df_pd = pd.DataFrame()
             # quinary
             df_pd.at[0, 'comp'] = row['comp']
@@ -449,24 +468,19 @@ def run5(structure, el1, el2, el3, el4, el5):
             df_pd.at[30, 'S'] = 0
             # query binary intermetallic from the materials project
             el = {e1, e2, e3, e4, e5}
-            df_1 = mpdr.get_dataframe({'chemsys': {'$in': binary()}},
-                                      properties=['pretty_formula', "formation_energy_per_atom", "e_above_hull"])
-            try:
-                df_2 = mpdr.get_dataframe({'chemsys': {'$in': ternary()}},
-                                          properties=['pretty_formula', "formation_energy_per_atom",
-                                                      "e_above_hull"])
-                if not df_2.empty:
-                    df_1 = pd.concat([df_2, df_1], ignore_index=True)
-            except:
-                print("Error")
+            df_1 = DataRetrieval(binary())
+            df_2 = DataRetrieval(ternary())
+            if not df_2.empty:
+                df_1 = pd.concat([df_2, df_1], ignore_index=True)
             df_in = pd.DataFrame()
-            df_in['comp'] = df_1['pretty_formula']
+            df_in['comp'] = df_1['formula_pretty']
             df_in['Hf'] = df_1['formation_energy_per_atom']
             df_in['S'] = 0
             df_final = pd.concat([df_pd, df_in], ignore_index=True)
             # build phase diagram
             comps = df_final['comp']
             temp = 0
+
             def phasecheck(t):
                 Ef = df_final['Hf'] - t * df_final['S']
                 mg_comp = [None] * len(comps)
@@ -477,34 +491,54 @@ def run5(structure, el1, el2, el3, el4, el5):
                     entries3[i] = PDEntry(composition=mg_comp[i], energy=Ef[i])
                 phase = PhaseDiagram(entries3)
                 df_5.loc[index, 'phase'] = phase
-                # print(phase)
                 # get decomposition and e_above_hull
                 test = PDEntry(composition=mg_comp[0], energy=Ef[0])
-                ehull = str(phase.get_e_above_hull(test))
-                print(test)
-                # entry = str(phase.get_decomp_and_e_above_hull(test))
-                # ehull = entry.split("}, ")[1].rstrip(")")
-                # phase = entry.split("}, ")[0].lstrip("(") + "}"
-
+                entry = str(phase.get_decomp_and_e_above_hull(test))
+                ehull = entry.split("}, ")[1].rstrip(")")
+                decomp = entry.split("}, ")[0].lstrip("(") + "}"
                 df_5.loc[index, "e_hull"] = ehull
-                # for i in entries3:
-                #     print(i)
-                # print(ehull)
-                return float(ehull)
+                return float(ehull), decomp
 
             temperature = []
             eahull = []
-            for x in range(30):
+            decomps = []
+            for x in range(50):
                 temperature.append(temp)
-                x = phasecheck(temp)
+                x, phase = phasecheck(temp)
+                decomps.append((phase, temp))
                 eahull.append(x)
-                temp += 100
+                temp += 50
             fig, ax = plt.subplots()
             ax.plot(temperature, eahull)
+            ax.fill_between(temperature, eahull, 0, alpha=0.3)
             plt.xlabel('Temperature (K)')
             plt.ylabel('Energy above hull')
+            tempphase = ""
+            for d in decomps:
+                if decompsplit(d[0]) != tempphase:
+                    ax.text(d[1], 0.0001*(decomps.index(d)), decompsplit(d[0]))
+                    tempphase = decompsplit(d[0])
+            title = "Stability vs. Temperature for " + el1 + el2 + el3 + el4 + el5
+            plt.title(title)
             plt.show()
             return
 
-print(run5("FCC", "Co", "Fe", "Mn", "W", "Zn"))
+def decompsplit(string):
+    begin = []
+    end = []
+    comps = []
+    string = string.replace("PDEntry : ", "|")
+    string = string.replace(" with energy ", "?")
+    for i in range(len(string)):
+        if string[i] == "|":
+            begin.append(i)
+        if string[i] == "?":
+            end.append(i)
+    for i in range(len(begin)):
+        comps.append(Composition(string[begin[i] + 1: end[i]]).reduced_formula)
+    return comps
 
+
+
+
+print(run5("FCC", "Co", "Cr", "Fe", "Ni", "W"))

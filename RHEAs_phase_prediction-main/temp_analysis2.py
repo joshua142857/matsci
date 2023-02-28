@@ -35,14 +35,3 @@ name = structure
 for i in elements:
     name += i
 df_out.to_excel("temp_for_metastability/" + name + ".xlsx")
-#
-# data = {'ternary': [1, 2], 'quaternary': 15, 'quinary': 5}
-# names = list(data.keys())
-# values = list(data.values())
-#
-# fig, axs = plt.subplots(figsize=(1, 1))
-# axs[0].bar(names, values)
-# fig.suptitle('Categorical Plotting')
-#
-# print(eahull.run5("BCC", "Al", "Cu","Ni","W","Pt"))
-# print(run3("BCC", "Co", "Cr","Mn"))

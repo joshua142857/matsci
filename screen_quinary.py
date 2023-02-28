@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import xlsxwriter
 sheets = ["BCC", "FCC"]
-wb = xlsxwriter.Workbook('RHEAs_phase_prediction-main/enthalpy_data_and_predictions/5element.xlsx',
-                             {'strings_to_numbers': True})
+wb = xlsxwriter.Workbook('RHEAs_phase_prediction-main/5element.xlsx',
+                         {'strings_to_numbers': True})
 for n in range(2):
     sheet = pd.read_excel('RHEAs_phase_prediction-main/enthalpy_data_and_predictions/bokas.xlsx',
                           sheet_name=sheets[n],

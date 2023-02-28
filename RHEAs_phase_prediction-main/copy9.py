@@ -1,6 +1,6 @@
-import update as u
+import screenJC as u
 
-x = u.run(56586)
-while x != -1:
-    print(x)
-    x = u.run(x)
+x = u.run("FCC", 11000)
+if x >= 0:
+    x = u.run("FCC", x)
+print(x)
