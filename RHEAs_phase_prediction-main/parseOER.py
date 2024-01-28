@@ -1,54 +1,45 @@
 import pandas as pd
 import numpy as np
 
-structure = "FCC"
 els = ['Al', 'Co', 'Cr', 'Cu', 'Fe', 'Hf', 'Mn', 'Mo',
        'Nb', 'Ni', 'Ta', 'Ti', 'W', 'Zr', 'V', 'Mg', 'Re',
        'Os', 'Rh', 'Ir', 'Pd', 'Pt', 'Ag', 'Au', 'Zn', 'Cd']
-OERels = ['Co', 'Fe', 'Mn', 'Mo', 'Ni', 'Ti', 'Pt', 'Pd', 'Ir', 'Rh']
-
-class Element:
-    def __init__(self, name):
-        self.name = name
-        self.count = 0
-        new_dict = {}
-        for el in els:
-            if el != name:
-                new_dict[el] = 0
-        self.pairs = new_dict
 
 
-def metastabilityCount(structure):
-    elements = []
-    for el in els:
-        elements.append(Element(el))
-    data = pd.read_excel("4fcc/4-" + structure.lower() + ".xlsx", sheet_name=structure) #change
-    for index, row in data.iterrows():
-        if row["e_hull"] >= 0.05:
-            print("Done")
-            break
-        else:
-            currentels = [row["e1"], row["e2"], row["e3"], row["e4"]] #change
+def findAlloys(structure):
+    pd2 = pd.read_excel("collection4" + structure + ".xlsx", sheet_name="Sheet1")
+    pd3 = pd.read_excel("5-" + structure.lower() + ".xlsx")
+    # pd4 = pd.read_excel("4-" + structure.lower() + ".xlsx")
+    # pd5 = pd.read_excel("5-" + structure.lower() + ".xlsx")
+    entries = []
+    for i, r in pd2.iterrows():
+        print(i)
+        for index, row in pd3.iterrows():
+            if row["e_hull"] < r["e_hull"]:
+                qin = [row["e1"], row["e2"], row["e3"], row["e4"], row["e5"]]
+                if r["e1"] in qin and r["e2"] in qin and r["e3"] in qin and r["e4"] in qin:
+                    entries.append(index)
+            if row["e_hull"] >= r["e_hull"]:
+                break
+    df = pd.DataFrame()
+    for i in entries:
+        df = df.append(pd3.iloc[i])
+    df.to_excel("collection5" + structure + ".xlsx")
 
-            def check(el):
-                for c in currentels:
-                    if el.name == c:
-                        return True
-                return False
+elsp = ['Zr', 'Au']
+ehull = 0.04
 
-            for el in elements:
-                if check(el):
-                    for currel in currentels:
-                        if el.name == currel:
-                            el.count += 1
-                        else:
-                            el.pairs[currel] += 1
-    frame = pd.read_excel("enthalpy_data_and_predictions/bokas.xlsx", sheet_name=structure, index_col=0)
-    for index, row in frame.iterrows():
-        for col in range(26):
-            if str(row[col]) != "nan":
-                row[col] = elements[col].pairs[index]
-    frame.to_excel("metastablepairs-" + structure.lower() + ".xlsx", sheet_name="1000K")
+def targetBinaries(structure, OERels):
+    pd2 = pd.read_excel("datasheets/3-" + structure.lower() + ".xlsx")
+    # for a in [pd2]:
+    #     a.set_index('Unnamed: 0', inplace=True)
+    for index, row in pd2.iterrows():
+        if row["e_hull"] > ehull:
+            pd2 = pd2.drop(index)
+        elif row["e1"] not in OERels or row["e2"] not in OERels:
+            pd2 = pd2.drop(index)
+    pd2.to_excel("stable/" + OERels[0] + OERels[1] + structure + ".xlsx")
 
-metastabilityCount("BCC")
-metastabilityCount("FCC")
+
+targetBinaries("FCC")
+# targetBinaries("BCC")

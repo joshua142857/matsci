@@ -9,18 +9,18 @@ for x in els:
     for y in els:
         if x != y and not pairs.__contains__((y, x)):
             pairs.append((x, y))
-structure = "BCC"
+structure = "FCC"
 
 
 def stabilize(t, cnt=-1):
     out = []
     alloySize = len(t[0])
     if alloySize == 2:
-        dp = pd.read_excel("3-" + structure.lower() + ".xlsx", sheet_name=structure)
+        dp = pd.read_excel("3-" + structure.lower() + ".xlsx")
     if alloySize == 3:
-        dp = pd.read_excel("4-" + structure.lower() + ".xlsx", sheet_name=structure)
+        dp = pd.read_excel("4-" + structure.lower() + ".xlsx")
     if alloySize == 4:
-        dp = pd.read_excel("5-" + structure.lower() + ".xlsx", sheet_name="1000K")
+        dp = pd.read_excel("5-" + structure.lower() + ".xlsx")
     for alloy in pairs:
         for index, row in dp.iterrows():
             ehull = row['e_hull']
