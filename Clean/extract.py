@@ -1,11 +1,12 @@
 from mp_api.client import MPRester
 import os
 
+# get API key method
 def getAPIKey(api_key_file='api_key.txt'):
     with open(api_key_file, 'r') as f:
         return f.read()
 
-
+# temporary
 a = getAPIKey()
 mpr = MPRester(api_key=a)
 with MPRester(api_key=a) as mpr:
@@ -14,6 +15,8 @@ with MPRester(api_key=a) as mpr:
     )
 
 # thermo_types=["GGA_GGA+U"]
+
+# takes list of elements and runs structure_search to retrieve necessary info into dict
 def list_to_dict(element_list, spacegroup:str, thermo='GGA_GGA+U'):
     out = {}
     for element in element_list:
@@ -27,8 +30,9 @@ def list_to_dict(element_list, spacegroup:str, thermo='GGA_GGA+U'):
             out[element] = thermo_docs[0].energy_above_hull
     return out
 
-
+# searches for summary based on element
 def structure_search(element: str, spacegroup: str = ""):
+    # if spacegroup isn't given (should be)
     if not spacegroup:
         docs = mpr.summary.search(formula=element, fields=["material_id", "symmetry"])
         return docs
